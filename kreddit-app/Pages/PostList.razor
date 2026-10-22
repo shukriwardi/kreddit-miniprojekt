@@ -22,7 +22,7 @@ else
         @foreach (var post in posts)
         {
             <tr>
-                <!-- 
+                <!--
                     These a href links will match the route in the page 'PostItem.razor'.
                     The route is defined as "/post/{id}" and the id is the post id.
                 -->
@@ -35,25 +35,36 @@ else
         }
     </table>
 
-    <br/>
+    <br />
 }
 
 @code {
     private Post[]? posts;
-    private Post? votePost;
 
     protected override async Task OnInitializedAsync()
     {
         posts = await apiService.GetPosts();
     }
 
-    private async void Upvote(int id)
+    private async Task Upvote(int id)
     {
         var updatedPost = await apiService.UpvotePost(id);
+        var post = posts?.FirstOrDefault(p => p.Id == id);
+        if (post != null && updatedPost != null)
+        {
+            post.Upvotes = updatedPost.Upvotes;
+            post.Downvotes = updatedPost.Downvotes;
+        }
     }
 
-    private async void Downvote(int id)
+    private async Task Downvote(int id)
     {
-        Console.WriteLine("Not implemented 😪");
+        var updatedPost = await apiService.DownvotePost(id);
+        var post = posts?.FirstOrDefault(p => p.Id == id);
+        if (post != null && updatedPost != null)
+        {
+            post.Upvotes = updatedPost.Upvotes;
+            post.Downvotes = updatedPost.Downvotes;
+        }
     }
 }
