@@ -72,36 +72,41 @@ app.MapGet("/posts/{id}", async (int id, AppDbContext db) =>
 });
 
 // POST create a new post
-app.MapPost("/posts", async (Post input, AppDbContext db) =>
+app.MapPost("/posts", async (PostInput input, AppDbContext db) =>
 {
-    if (db.Entry(input.User).State == EntityState.Detached && input.User.Id == 0)
+    var user = await db.Users.FirstOrDefaultAsync(u => u.Username == input.Username);
+    if (user is null)
     {
-        db.Users.Add(input.User);
+        user = new User(input.Username);
+        db.Users.Add(user);
     }
 
-    input.CreatedAt = DateTime.UtcNow;
-    db.Posts.Add(input);
+    var post = new Post(user, input.Title, input.Content ?? "", input.Url);
+    db.Posts.Add(post);
     await db.SaveChangesAsync();
 
-    return Results.Created($"/posts/{input.Id}", input);
+    return Results.Created($"/posts/{post.Id}", post);
 });
 
 // POST create a comment on a post
-app.MapPost("/posts/{postId}/comments", async (int postId, Comment input, AppDbContext db) =>
+app.MapPost("/posts/{postId}/comments", async (int postId, CommentInput input, AppDbContext db) =>
 {
     var post = await db.Posts.FindAsync(postId);
     if (post is null) return Results.NotFound();
 
-    if (db.Entry(input.User).State == EntityState.Detached && input.User.Id == 0)
+    var user = await db.Users.FirstOrDefaultAsync(u => u.Username == input.Username);
+    if (user is null)
     {
-        db.Users.Add(input.User);
+        user = new User(input.Username);
+        db.Users.Add(user);
     }
 
-    input.CreatedAt = DateTime.UtcNow;
-    post.Comments.Add(input);
+    var comment = new Comment(input.Content, user: user);
+    comment.CreatedAt = DateTime.UtcNow;
+    post.Comments.Add(comment);
     await db.SaveChangesAsync();
 
-    return Results.Ok(input);
+    return Results.Ok(comment);
 });
 
 // PUT upvote a post
@@ -149,3 +154,6 @@ app.MapPut("/comments/{id}/downvote", async (int id, AppDbContext db) =>
 });
 
 app.Run();
+
+record PostInput(string Title, string? Content, string? Url, string Username);
+record CommentInput(string Content, string Username);
