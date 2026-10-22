@@ -20,7 +20,6 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// Seed data if the database is empty
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -50,7 +49,6 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-// GET all posts, newest first
 app.MapGet("/posts", async (AppDbContext db) =>
 {
     return await db.Posts
@@ -59,7 +57,6 @@ app.MapGet("/posts", async (AppDbContext db) =>
         .ToListAsync();
 });
 
-// GET one post with its comments
 app.MapGet("/posts/{id}", async (int id, AppDbContext db) =>
 {
     var post = await db.Posts
@@ -71,7 +68,6 @@ app.MapGet("/posts/{id}", async (int id, AppDbContext db) =>
     return post is not null ? Results.Ok(post) : Results.NotFound();
 });
 
-// POST create a new post
 app.MapPost("/posts", async (PostInput input, AppDbContext db) =>
 {
     var user = await db.Users.FirstOrDefaultAsync(u => u.Username == input.Username);
@@ -88,7 +84,6 @@ app.MapPost("/posts", async (PostInput input, AppDbContext db) =>
     return Results.Created($"/posts/{post.Id}", post);
 });
 
-// POST create a comment on a post
 app.MapPost("/posts/{postId}/comments", async (int postId, CommentInput input, AppDbContext db) =>
 {
     var post = await db.Posts.FindAsync(postId);
@@ -109,7 +104,6 @@ app.MapPost("/posts/{postId}/comments", async (int postId, CommentInput input, A
     return Results.Ok(comment);
 });
 
-// PUT upvote a post
 app.MapPut("/posts/{id}/upvote", async (int id, AppDbContext db) =>
 {
     var post = await db.Posts.FindAsync(id);
@@ -120,7 +114,6 @@ app.MapPut("/posts/{id}/upvote", async (int id, AppDbContext db) =>
     return Results.Ok(post);
 });
 
-// PUT downvote a post
 app.MapPut("/posts/{id}/downvote", async (int id, AppDbContext db) =>
 {
     var post = await db.Posts.FindAsync(id);
@@ -131,7 +124,6 @@ app.MapPut("/posts/{id}/downvote", async (int id, AppDbContext db) =>
     return Results.Ok(post);
 });
 
-// PUT upvote a comment
 app.MapPut("/comments/{id}/upvote", async (int id, AppDbContext db) =>
 {
     var comment = await db.Comments.FindAsync(id);
@@ -142,7 +134,6 @@ app.MapPut("/comments/{id}/upvote", async (int id, AppDbContext db) =>
     return Results.Ok(comment);
 });
 
-// PUT downvote a comment
 app.MapPut("/comments/{id}/downvote", async (int id, AppDbContext db) =>
 {
     var comment = await db.Comments.FindAsync(id);
