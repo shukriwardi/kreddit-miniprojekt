@@ -7,6 +7,9 @@
 @using Microsoft.Extensions.Configuration
 @inject IConfiguration Configuration
 
+<a href="/newpost">+ Create new thread</a>
+<br /><br />
+
 @if (posts == null)
 {
     <p><em>Loading...</em></p>
@@ -22,10 +25,6 @@ else
         @foreach (var post in posts)
         {
             <tr>
-                <!--
-                    These a href links will match the route in the page 'PostItem.razor'.
-                    The route is defined as "/post/{id}" and the id is the post id.
-                -->
                 <td><a href="/post/@post.Id">@post.Title</a></td>
                 <td>@post.Content</td>
                 <td>@(post.Upvotes - post.Downvotes)</td>

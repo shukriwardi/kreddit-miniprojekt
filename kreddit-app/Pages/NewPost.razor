@@ -1,0 +1,104 @@
+@page "/newpost"
+
+@using kreddit_app.Data;
+@inject ApiService apiService
+@inject NavigationManager NavigationManager
+
+<PageTitle>New post - Kreddit</PageTitle>
+
+<a href="/">&larr; Back to front page</a>
+
+<h3>Create a new thread</h3>
+
+<div>
+    <p>
+        <label>Your name:</label><br/>
+        <input placeholder="Your name" @bind-value="author" />
+    </p>
+
+    <p>
+        <label>Title:</label><br/>
+        <input placeholder="Title" @bind-value="title" />
+    </p>
+
+    <p>
+        <label>
+            <input type="radio" name="postType" checked="@(!isUrl)" @onclick="() => isUrl = false" />
+            Text post
+        </label>
+        <label>
+            <input type="radio" name="postType" checked="@isUrl" @onclick="() => isUrl = true" />
+            Link post
+        </label>
+    </p>
+
+    @if (isUrl)
+    {
+        <p>
+            <label>URL:</label><br/>
+            <input placeholder="https://..." @bind-value="url" />
+        </p>
+    }
+    else
+    {
+        <p>
+            <label>Text:</label><br/>
+            <textarea placeholder="Write something..." @bind="content"></textarea>
+        </p>
+    }
+
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <p style="color:red">@errorMessage</p>
+    }
+
+    <button @onclick="Submit">Create thread</button>
+</div>
+
+@code {
+    private string? author;
+    private string? title;
+    private string? content;
+    private string? url;
+    private bool isUrl = false;
+    private string? errorMessage;
+
+    private async Task Submit()
+    {
+        errorMessage = null;
+
+        if (string.IsNullOrWhiteSpace(author) || string.IsNullOrWhiteSpace(title))
+        {
+            errorMessage = "Please fill in your name and a title.";
+            return;
+        }
+
+        if (isUrl && string.IsNullOrWhiteSpace(url))
+        {
+            errorMessage = "Please enter a URL.";
+            return;
+        }
+
+        if (!isUrl && string.IsNullOrWhiteSpace(content))
+        {
+            errorMessage = "Please enter some text.";
+            return;
+        }
+
+        var newPost = await apiService.CreatePost(
+            title,
+            isUrl ? null : content,
+            isUrl ? url : null,
+            author
+        );
+
+        if (newPost != null)
+        {
+            NavigationManager.NavigateTo($"/post/{newPost.Id}");
+        }
+        else
+        {
+            errorMessage = "Something went wrong creating the post.";
+        }
+    }
+}
